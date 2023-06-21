@@ -27,103 +27,81 @@ void setup() {
 
 void loop() {
 
-  if (isProximityWithinRange()) {
-    
-    Serial.println("-- PROXIMITY DISTRUBED --");
-    digitalWrite(proximityLedPin, HIGH);
+  bool enteringFlag = isUltrasonicWithinRange();
+  bool exitingFlag = isProximityWithinRange();
 
-    long inTimeout = millis();
 
-    while (true) {
-      if (isUltrasonicWithinRange()) {
-        setLedCount(--ledCount);
-        digitalWrite(ultrasonicLedPin, HIGH);
-  
-        while(isUltrasonicWithinRange()) {
-          Serial.println("waiting to leave...");  
-        }
-
-        digitalWrite(buzzerPin, HIGH);
-        delay(100);
-        digitalWrite(buzzerPin, LOW);
-        delay(100);
-        digitalWrite(buzzerPin, HIGH);
-        delay(100);
-        digitalWrite(buzzerPin, LOW);
-
-        delay(100);
-        digitalWrite(proximityLedPin, LOW);
-        digitalWrite(ultrasonicLedPin, LOW);
-               
-        break;
-      }
-      else if (isProximityWithinRange()) {
-        inTimeout = millis();
-      }
-      else if (!isProximityWithinRange()) {
-        Serial.print(millis());
-        Serial.print(" : ");
-        Serial.println(inTimeout);
-
-        if (millis() - inTimeout > 700) {
-          Serial.println("Timeout...");
-          digitalWrite(proximityLedPin, LOW);
-          break;
-        }
-      }
-      delay(50);
-    }
-    delay(100);
-  }
-
-  else if (isUltrasonicWithinRange()) {
-    
-    Serial.println("-- ULTRASONIC DISTRUBED --");
+   while (enteringFlag) {
     digitalWrite(ultrasonicLedPin, HIGH);
 
-    long inTimeout = millis();
-
-    while (true) {
-      if (isProximityWithinRange()) {
+    delay(200);
+    bool nextFlag = false;
+    if (isProximityWithinRange() && nextFlag == false) {  
+      if (nextFlag == false) {
         setLedCount(++ledCount);
-        digitalWrite(proximityLedPin, HIGH);
-  
-        while(isProximityWithinRange()) {
-          Serial.println("waiting to leave...");  
-        }
-
-        digitalWrite(buzzerPin, HIGH);
-        delay(300);
-        digitalWrite(buzzerPin, LOW);
-
-        delay(100);
-        digitalWrite(proximityLedPin, LOW);
-        digitalWrite(ultrasonicLedPin, LOW);
-               
-        break;
+        nextFlag = true;
       }
-      else if (isUltrasonicWithinRange()) {
-        inTimeout = millis();
-      }
-      else if (!isUltrasonicWithinRange()) {
-        Serial.print(millis());
-        Serial.print(" : ");
-        Serial.println(inTimeout);
-
-        if (millis() - inTimeout > 700) {
-          Serial.println("Timeout...");
-          digitalWrite(ultrasonicLedPin, LOW);
-          break;
-        }
-      }
-      delay(50);
-
     }
 
-    delay(100);
+    if (nextFlag == true) {
+      digitalWrite(proximityLedPin, HIGH);
+      digitalWrite(ultrasonicLedPin, LOW);
+      
+
+      while (isProximityWithinRange()) {
+        delay(200);
+      }
+
+      digitalWrite(buzzerPin, HIGH);
+      delay(120);
+      digitalWrite(buzzerPin, LOW);
+      delay(120);
+    
+      digitalWrite(proximityLedPin, LOW);
+      enteringFlag = false;
+      delay(80);
+    }
   }
   
-  delay(100);
+
+  while (exitingFlag) {
+    digitalWrite(proximityLedPin, HIGH);
+
+    delay(200);
+    bool nextFlag = false;
+    if (isUltrasonicWithinRange() && nextFlag == false) {  
+      if (nextFlag == false) {
+        setLedCount(--ledCount);
+        nextFlag = true;
+      }
+    }
+
+    if (nextFlag == true) {
+      digitalWrite(ultrasonicLedPin, HIGH);
+      digitalWrite(proximityLedPin, LOW);
+
+      while (isUltrasonicWithinRange()) {
+        delay(200);
+      }
+
+      digitalWrite(buzzerPin, HIGH);
+      delay(80);
+      digitalWrite(buzzerPin, LOW);
+      delay(80);
+      digitalWrite(buzzerPin, HIGH);
+      delay(80);
+      digitalWrite(buzzerPin, LOW);
+    
+      digitalWrite(ultrasonicLedPin, LOW);
+      exitingFlag = false;
+      delay(80);
+    }
+  }
+  
+
+
+
+  delay(150);
 }
 
 bool isProximityWithinRange() {
@@ -131,10 +109,13 @@ bool isProximityWithinRange() {
 }
 
 bool isUltrasonicWithinRange() {
-  const short near = 50;
-  const short far = 400;
-  const int distance = getUltrasonicDistance();
-  return (distance <= far && distance >= near);
+  short distance = getUltrasonicDistance();
+  bool inrange = distance >= 0 && distance <= 500;
+  Serial.print(distance);
+  Serial.print(" : ");
+  Serial.println(inrange);
+
+  return inrange;
 }
 
 short getUltrasonicDistance() {
