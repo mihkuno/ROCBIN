@@ -29,6 +29,7 @@ void loop() {
 
   bool enteringFlag = isUltrasonicWithinRange();
   bool exitingFlag = isProximityWithinRange();
+  long lastTime = millis();
 
 
    while (enteringFlag) {
@@ -60,6 +61,15 @@ void loop() {
       digitalWrite(proximityLedPin, LOW);
       enteringFlag = false;
       delay(80);
+    }
+
+    if (isUltrasonicWithinRange()) {
+      lastTime = millis();
+    }
+    else if (millis() - lastTime > 1000) {
+      Serial.println("Timeout...");
+      digitalWrite(ultrasonicLedPin, LOW);
+      enteringFlag = false;
     }
   }
   
@@ -95,6 +105,15 @@ void loop() {
       digitalWrite(ultrasonicLedPin, LOW);
       exitingFlag = false;
       delay(80);
+    }
+
+    if (isProximityWithinRange()) { 
+      lastTime = millis();
+    }
+    else if (millis() - lastTime > 1000) {
+      Serial.println("Timeout...");
+      digitalWrite(proximityLedPin, LOW);
+      exitingFlag = false;
     }
   }
   
